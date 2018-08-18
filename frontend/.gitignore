@@ -1,3 +1,5 @@
-### NetBeans ###
+### npm ###
 /dist/
+/node/
 /node_modules/
+package-lock.json
