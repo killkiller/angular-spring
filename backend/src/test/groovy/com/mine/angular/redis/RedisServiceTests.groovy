@@ -18,8 +18,10 @@ class RedisServiceTests {
 
     @Test
     void testRedisConnection() {
-        RedisConnection conn = factory.getConnection();
-        conn.set("hello".getBytes(), "world".getBytes());
-        Assert.assertEquals("world", new String(conn.get("hello".getBytes())));
+        try {
+            RedisConnection conn = factory.getConnection();
+        } catch (ex) {
+            Assert.fail("connect redis error");
+        }
     }
 }
