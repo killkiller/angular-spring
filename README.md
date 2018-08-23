@@ -20,3 +20,6 @@
 * 启动jar时，会有两次用户授权提示，其中第一次是安装redis服务，第二次是启动redis服务，redis的服务名注册为AssistantRedis，端口为7979(这些一般不会和机器上现有实例冲突)
 * 使用Ctrl+C关闭jar时，会有两次用户授权提示，其中第一次是停止redis服务，第二次是卸载名为AssistantRedis的redis服务
 * 直接关闭运行jar的窗口，此时无法检测到程序退出，所以无法对redis服务进行清理，想要卸载redis服务的话可以重新启动jar，并Ctrl+C关闭之
+
+### 非pom依赖
+* Redis-x64-3.2.100 WIN版Redis
