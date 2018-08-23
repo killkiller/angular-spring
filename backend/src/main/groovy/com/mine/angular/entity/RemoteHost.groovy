@@ -1,7 +1,5 @@
 package com.mine.angular.entity
 
-import com.jcraft.jsch.Channel
-import com.jcraft.jsch.ChannelSftp
 import com.jcraft.jsch.JSch
 import com.jcraft.jsch.Session
 import org.slf4j.Logger
@@ -9,6 +7,9 @@ import org.slf4j.LoggerFactory
 
 class RemoteHost {
     private final static Logger LOGGER = LoggerFactory.getLogger(RemoteHost.class);
+    private final static int BUFFER_LEN = 1024;
+    private final static int CONN_TIMEOUT = 3000;
+    private final static int EXEC_TIMEOUT = 200;
 
     String ip;
     int port;
@@ -16,8 +17,6 @@ class RemoteHost {
     String password;
 
     private Session session;
-    private Channel shell;
-    private ChannelSftp sftp;
 
     RemoteHost(String ip, String username, String password, int port = 22) {
         this.ip = ip;
@@ -26,22 +25,14 @@ class RemoteHost {
         this.port = port;
     }
 
-    def connect(timeout = 30000) {
+    def connect(timeout = CONN_TIMEOUT * 5) {
         if (!this.session || !this.session.isConnected()) {
             this.session = new JSch().getSession(this.username, this.ip, this.port);
             this.session.setPassword(this.password);
             session.setConfig("StrictHostKeyChecking", "no");
             try {
                 this.session.connect(timeout);
-                LOGGER.info("Connected {}.", this.ip);
-
-                this.shell = this.session.openChannel("shell");
-                this.shell.connect(timeout);
-                LOGGER.info("Connected ssh {}.", this.ip);
-
-                this.sftp = this.session.openChannel("sftp");
-                this.sftp.connect(timeout);
-                LOGGER.info("Connected sftp {}.", this.ip);
+                LOGGER.info("Connected session {}.", this.ip);
             } catch (ex) {
                 LOGGER.error("Connect to {} error!", this.ip);
             }
@@ -50,12 +41,8 @@ class RemoteHost {
 
     def disconnect() {
         try {
-            !this.sftp.isConnected() ?: this.sftp.disconnect();
-            LOGGER.info("Disconnected sftp {}.", this.ip);
-            !this.shell.isConnected() ?: this.shell.disconnect();
-            LOGGER.info("Disconnected ssh {}.", this.ip);
             !this.session.isConnected() ?: this.session.disconnect();
-            LOGGER.info("Disconnected {}.", this.ip);
+            LOGGER.info("Disconnected session {}.", this.ip);
         } catch (ex) {
             LOGGER.error(ex.getMessage());
         }
@@ -67,28 +54,32 @@ class RemoteHost {
      * @return
      */
     def exec(String cmd) {
-        cmd += "\n"; // return hit
-        def ins = this.shell.inputStream;
-        def ous = this.shell.outputStream;
+        def command = this.session.openChannel("exec");
+        command.setCommand(cmd);
+        command.connect(CONN_TIMEOUT);
+        LOGGER.info("Connected ssh {}.", this.ip);
 
-        ous.write(cmd.getBytes());
-        ous.flush();
-
-        if (ins.available() > 0) {
-            byte[] data = new byte[ins.available()];
-            try {
-                int len = ins.read(data);
-                if (len < 0) {
-                    throw new IOException("Network error, cant get shell error.");
-                }
-
-                return new String(data, 0, len, "iso8859-1")
-            } finally {
-                ins.close();
-                ous.close();
+        InputStream ins = command.getInputStream();
+        StringBuilder builder = new StringBuilder();
+        byte[] data = new byte[BUFFER_LEN];
+        while (true) {
+            while (ins.available() > 0) {
+                int len = ins.read(data, 0, BUFFER_LEN);
+                if (len < 0) break;
+                builder.append(new String(data, 0, len));
             }
+            if (command.isClosed()) {
+                if (ins.available() > 0) continue;
+                break;
+            }
+
+            Thread.sleep(EXEC_TIMEOUT);
         }
 
+        command.disconnect();
+        LOGGER.info("Disconnected ssh {}.", this.ip);
+
+        return builder.toString();
     }
 
     /**
@@ -97,6 +88,10 @@ class RemoteHost {
      * @param to
      */
     def downloadFile(String from, String to) {
+        def sftp = this.session.openChannel("sftp");
+        sftp.connect(CONN_TIMEOUT);
+        LOGGER.info("Connected sftp {}.", this.ip);
+
         if (from.endsWith("/") || from.lastIndexOf("/") == -1) {
             throw new IllegalArgumentException("Bad path: $from.");
         }
@@ -105,6 +100,9 @@ class RemoteHost {
         FileOutputStream fileOutputStream = new FileOutputStream(file);
         sftp.get(from.substring(from.lastIndexOf("/") + 1), fileOutputStream);
         fileOutputStream.close();
+
+        sftp.disconnect();
+        LOGGER.info("Disconnected sftp {}.", this.ip);
 
         return file;
     }
@@ -115,14 +113,21 @@ class RemoteHost {
      * @param to , 远端文件，绝对路径
      */
     def uploadFile(String from, String to) {
+        def sftp = this.session.openChannel("sftp");
+        sftp.connect(CONN_TIMEOUT);
+        LOGGER.info("Connected sftp {}.", this.ip);
+
         if (to.endsWith("/") || to.lastIndexOf("/") == -1) {
             throw new IllegalArgumentException("Bad path: $to.");
         }
         sftp.cd(to.substring(0, to.lastIndexOf("/")));
         File file = new File(from);
         FileInputStream fileInputStream = new FileInputStream(file);
-        sftp.put(fileInputStream, file.getName());
+        sftp.put(fileInputStream, to.substring(to.lastIndexOf("/") + 1));
         fileInputStream.close();
+
+        sftp.disconnect();
+        LOGGER.info("Disconnected sftp {}.", this.ip);
 
         return true;
     }
@@ -132,11 +137,18 @@ class RemoteHost {
      * @param path , 远端文件，绝对路径
      */
     def deleteFile(String path) {
+        def sftp = this.session.openChannel("sftp");
+        sftp.connect(CONN_TIMEOUT);
+        LOGGER.info("Connected sftp {}.", this.ip);
+
         if (path.endsWith("/") || path.lastIndexOf("/") == -1) {
             throw new IllegalArgumentException("Bad path: $path.");
         }
         sftp.cd(path.substring(0, path.lastIndexOf("/")));
         sftp.rm(path.substring(path.lastIndexOf("/") + 1));
+
+        sftp.disconnect();
+        LOGGER.info("Disconnected sftp {}.", this.ip);
     }
 
 }
