@@ -16,6 +16,7 @@ class RedisService implements ApplicationRunner, DisposableBean {
     private final static REDIS_SVC_NAME = "AssistantRedis";
 
     private final static RESOURCE_DIR = "src/main/resources/redis";
+    private final static RESOURCE_BASE_DIR = "backend/src/main/resources/redis";
     // 之所以使用StringBuilder是因为使用了Groovy惰性求值的特点，此值可根据是否在jar中运行来更新redis的运行路径
     private static StringBuilder REDIS_DIR = new StringBuilder("redis");
 
@@ -36,7 +37,13 @@ class RedisService implements ApplicationRunner, DisposableBean {
         def dir = classResolver.getClassRunLocation(this.getClass());
         if (!dir.endsWith(".jar")) {
             // 本地class运行，作为调试或者ci时使用此目录
-            REDIS_DIR.replace(0, REDIS_DIR.length(), RESOURCE_DIR);
+            if (System.getProperty("user.dir").endsWith("backend")) {
+                // 执行test
+                REDIS_DIR.replace(0, REDIS_DIR.length(), RESOURCE_DIR);
+            } else {
+                // 执行BackendApplication
+                REDIS_DIR.replace(0, REDIS_DIR.length(), RESOURCE_BASE_DIR);
+            }
         } else {
             // 在jar中运行(说明不是开发环境了), 从jar拷贝文件到redis目录
             File redisRunDir = new File(REDIS_DIR.toString());
