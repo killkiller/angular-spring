@@ -1,4 +1,9 @@
-.header img {
-    width: 20px;
-    height: 20px;
+header img {
+    width: 30px;
+    height: 30px;
+}
+
+header div img[title=Add] {
+    width: 25px;
+    height: 25px;
 }
