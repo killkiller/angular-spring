@@ -8,7 +8,22 @@ header img[title=Add] {
     height: 25px;
 }
 
+header img[title=Add]:hover {
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+}
+
 #global-search {
     min-width: 5rem;
     max-width: 25rem;
+}
+
+footer {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+}
+
+p {
+    margin-bottom: .25rem;
 }
