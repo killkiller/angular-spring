@@ -1,9 +1,14 @@
-header img {
+#brand-logo {
     width: 30px;
     height: 30px;
 }
 
-header div img[title=Add] {
+header img[title=Add] {
     width: 25px;
     height: 25px;
+}
+
+#global-search {
+    min-width: 5rem;
+    max-width: 25rem;
 }
