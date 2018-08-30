@@ -4,9 +4,11 @@ import {AppComponent} from "./app.component";
 import {RouterModule, Routes} from "@angular/router";
 import {EnvComponent} from "./env/env.component";
 import {HomeComponent} from "./home/home.component";
+import {CreateComponent} from "./create/create.component";
 
 export const ROUTES:Routes = [
     {path: '', component: HomeComponent},
+    {path: 'create', component: CreateComponent},
     {path: 'env/:id', component: EnvComponent}
 ];
 
@@ -14,7 +16,8 @@ export const ROUTES:Routes = [
     declarations: [
         AppComponent,
         EnvComponent,
-        HomeComponent
+        HomeComponent,
+        CreateComponent
     ],
     imports: [
         BrowserModule,

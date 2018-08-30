@@ -10,19 +10,23 @@
                         </a>
                     </div>
                     <div class="col-md-8">
-                        <input id="global-search" type="text" class="form-control" placeholder="Search">
+                        <form>
+                            <input id="global-search" type="search"  class="form-control" placeholder="Search" aria-label="Search">
+                        </form>
                     </div>
                 </div>
             </div>
             <div class="col-md-6 col-lg-7 col-xl-8 text-right">
-                <img src="assets/images/home/create.png" title="Add">
+                <a routerLink="create">
+                    <img src="assets/images/home/create.png" title="Add">
+                </a>
             </div>
         </div>
     </div>
 </header>
 <router-outlet></router-outlet>
-<footer class="text-muted bg-light">
-    <div class="container border-light">
+<footer class="text-muted border-top">
+    <div class="container">
         <p class="float-right">
             <a href="#">Back to top</a>
         </p>
