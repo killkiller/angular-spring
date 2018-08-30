@@ -1,6 +1,7 @@
 #brand-logo {
     width: 30px;
     height: 30px;
+    margin-right: -6px;
 }
 
 header img[title=Add] {
