@@ -2,6 +2,7 @@
 
 ### 说明
 * backend/src/main/resources/static一般用于放置spring-boot项目的静态文件，而此项目结构放置frontend编译后的静态文件，因为编译后文件的动态性，所以不对此目录的文件进行版本跟踪。本项目结构特别适用于ci，在项目根目录下mvn install会自动将frontend的编译文件拷贝于此并打成可运行jar包。
+* Angular Router定义的路由在ng server开发服务器上是可以从浏览器地址栏进行路由的，但是部署到服务器上从服务器端访问URL时不会感知到此URL，此时需要使用一个Controller(见ViewController)来将URL重定向到SPA，没错，我们的应用前端是SPA。
 
 ### 开发过程
 1. IDE启动backend main.class或者java -jar backend-XX.jar开启后台服务，默认监听8080端口
